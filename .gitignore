@@ -1,0 +1,25 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Xcode user-specific data
+*.xcuserstate
+xcuserdata/
+*.xcworkspace/xcuserdata/
+
+# Build artifacts
+build/
+DerivedData/
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# CocoaPods / SPM
+Pods/
+.build/
+
+# Misc
+*.hmap
+*.swp
+*~
