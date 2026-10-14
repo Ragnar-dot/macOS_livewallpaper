@@ -62,3 +62,10 @@ The app runs entirely from the **menu bar** — there is no dock icon or main wi
 ## License
 
 This project is open source. Feel free to use and modify it.
+
+## 👤 Autor
+
+**Alexander Keterling**
+
+- GitHub: [@Ragnar-dot](https://github.com/Ragnar-dot)
+- Website: [loop-expression.de](https://www.loop-expression.de)
