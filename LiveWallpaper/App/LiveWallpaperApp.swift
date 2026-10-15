@@ -12,8 +12,15 @@ struct LiveWallpaperApp: App {
                 .environmentObject(libraryManager)
                 .environmentObject(wallpaperManager)
         } label: {
-            Image(systemName: "play.rectangle.fill")
+            Image(systemName: menuBarSymbol)
         }
         .menuBarExtraStyle(.window)
+    }
+
+    private var menuBarSymbol: String {
+        if wallpaperManager.currentURL == nil {
+            return "play.rectangle"
+        }
+        return wallpaperManager.isPlaying ? "play.rectangle.fill" : "pause.rectangle"
     }
 }

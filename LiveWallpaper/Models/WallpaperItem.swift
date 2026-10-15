@@ -13,22 +13,18 @@ struct WallpaperItem: Identifiable, Codable, Equatable {
         self.dateAdded = dateAdded
     }
 
-    func resolveURL() -> URL? {
+    /// Resolves the bookmark. A stale bookmark still yields a valid URL (e.g. after the
+    /// file was moved or renamed); the caller should then store fresh bookmark data.
+    func resolveBookmark() -> (url: URL, isStale: Bool)? {
         var isStale = false
         guard let url = try? URL(
             resolvingBookmarkData: bookmarkData,
-            options: [],
+            options: [.withoutUI],
             relativeTo: nil,
             bookmarkDataIsStale: &isStale
         ) else {
             return nil
         }
-
-        if isStale {
-            // Bookmark is stale; caller should regenerate
-            return nil
-        }
-
-        return url
+        return (url, isStale)
     }
 }

@@ -9,8 +9,10 @@ final class WallpaperWindow: NSPanel {
             defer: false
         )
 
-        // Place below desktop icons but above desktop picture
-        level = NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.desktopWindow)) - 1)
+        // Place below desktop icons but above desktop picture. The system wallpaper window uses
+        // desktopWindow - 1 on current macOS (desktopWindow on older versions); sharing its level
+        // would let macOS reorder it in front of the video.
+        level = NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.desktopWindow)) + 1)
 
         // Click-through: let mouse events pass to Finder/desktop
         ignoresMouseEvents = true

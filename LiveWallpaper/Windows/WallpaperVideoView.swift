@@ -1,10 +1,37 @@
 import AppKit
 import AVFoundation
 
+/// Muted, endlessly looping playback of one video file.
+final class LoopingVideoPlayer {
+    let player = AVQueuePlayer()
+    private let looper: AVPlayerLooper  // Must retain — deallocation stops looping
+
+    init(url: URL) {
+        player.isMuted = true
+        looper = AVPlayerLooper(player: player, templateItem: AVPlayerItem(asset: AVURLAsset(url: url)))
+    }
+
+    func play() {
+        player.play()
+    }
+
+    func pause() {
+        player.pause()
+    }
+}
+
+/// Displays a player's frames. Several views can share one player, so a video
+/// shown on multiple screens is decoded only once.
 final class WallpaperVideoView: NSView {
-    private var player: AVQueuePlayer?
     private var playerLayer: AVPlayerLayer?
-    private var looper: AVPlayerLooper?  // Must retain — deallocation stops looping
+    private var readyObservation: NSKeyValueObservation?
+
+    /// Each new player gets its own layer. The previous layer stays visible until the new
+    /// video's first frame is ready, so switching never flashes the desktop picture.
+    var player: AVPlayer? {
+        get { playerLayer?.player }
+        set { show(newValue) }
+    }
 
     override init(frame: NSRect) {
         super.init(frame: frame)
@@ -15,49 +42,43 @@ final class WallpaperVideoView: NSView {
         fatalError("init(coder:) has not been implemented")
     }
 
-    func play(url: URL) {
-        // Clean up previous playback
-        stop()
+    private func show(_ newPlayer: AVPlayer?) {
+        guard newPlayer !== playerLayer?.player else { return }
 
-        let asset = AVURLAsset(url: url)
-        let templateItem = AVPlayerItem(asset: asset)
-        let queuePlayer = AVQueuePlayer()
-        queuePlayer.isMuted = true
+        let previousLayer = playerLayer
+        readyObservation = nil
+        // Drop layers still waiting to be replaced from an earlier switch
+        layer?.sublayers?
+            .filter { $0 !== previousLayer }
+            .forEach { $0.removeFromSuperlayer() }
 
-        let layer = AVPlayerLayer(player: queuePlayer)
-        layer.frame = bounds
-        layer.videoGravity = .resizeAspectFill
-        layer.autoresizingMask = [.layerWidthSizable, .layerHeightSizable]
-        self.layer?.sublayers?.removeAll()
-        self.layer?.addSublayer(layer)
+        guard let newPlayer else {
+            previousLayer?.removeFromSuperlayer()
+            playerLayer = nil
+            return
+        }
 
-        let playerLooper = AVPlayerLooper(player: queuePlayer, templateItem: templateItem)
+        let newLayer = AVPlayerLayer(player: newPlayer)
+        newLayer.frame = bounds
+        newLayer.videoGravity = .resizeAspectFill
+        newLayer.autoresizingMask = [.layerWidthSizable, .layerHeightSizable]
+        layer?.addSublayer(newLayer)
+        playerLayer = newLayer
 
-        self.player = queuePlayer
-        self.playerLayer = layer
-        self.looper = playerLooper
-
-        queuePlayer.play()
+        readyObservation = newLayer.observe(\.isReadyForDisplay, options: [.initial, .new]) { [weak previousLayer] layer, _ in
+            guard layer.isReadyForDisplay else { return }
+            DispatchQueue.main.async {
+                previousLayer?.removeFromSuperlayer()
+            }
+        }
     }
 
-    func pause() {
-        player?.pause()
-    }
-
-    func resume() {
-        player?.play()
-    }
-
-    func stop() {
-        player?.pause()
-        looper = nil
-        player = nil
-        playerLayer?.removeFromSuperlayer()
-        playerLayer = nil
-    }
-
-    override func layout() {
-        super.layout()
-        playerLayer?.frame = bounds
+    override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(newSize)
+        // Resize without the implicit layer animation (visible in the small list previews)
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        layer?.sublayers?.forEach { $0.frame = bounds }
+        CATransaction.commit()
     }
 }

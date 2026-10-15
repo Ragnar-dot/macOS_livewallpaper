@@ -7,10 +7,16 @@ struct PlaybackControlsView: View {
         Button {
             wallpaperManager.togglePlayPause()
         } label: {
-            Image(systemName: wallpaperManager.isPlaying ? "pause.fill" : "play.fill")
-                .font(.body)
+            Label(
+                wallpaperManager.isPlaying ? "Pause" : "Play",
+                systemImage: wallpaperManager.isPlaying ? "pause.circle.fill" : "play.circle.fill"
+            )
+            .labelStyle(.iconOnly)
+            .font(.system(size: 26))
+            .symbolRenderingMode(.hierarchical)
+            .contentTransition(.symbolEffect(.replace))
         }
         .buttonStyle(.borderless)
-        .disabled(LibraryManager.shared.selectedItemID == nil)
+        .disabled(wallpaperManager.currentURL == nil)
     }
 }

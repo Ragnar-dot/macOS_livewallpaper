@@ -6,15 +6,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         WallpaperManager.shared.setup()
 
         // Restore last played wallpaper
-        if let lastID = UserDefaults.standard.string(forKey: "lastWallpaperID"),
-           let uuid = UUID(uuidString: lastID),
-           let item = LibraryManager.shared.items.first(where: { $0.id == uuid }),
-           let url = item.resolveURL() {
-            WallpaperManager.shared.setVideo(url: url)
+        if let item = LibraryManager.shared.selectedItem {
+            LibraryManager.shared.select(item)
         }
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        // Finalize a removal that is still waiting for undo
+        LibraryManager.shared.dismissNotice()
         LibraryManager.shared.save()
     }
 }
