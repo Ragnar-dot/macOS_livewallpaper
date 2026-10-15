@@ -11,13 +11,22 @@ xcuserdata/
 # Build artifacts
 build/
 DerivedData/
+*.app
 *.ipa
+*.xcarchive
+*.dmg
+*.pkg
 *.dSYM.zip
 *.dSYM
+*.xcresult
 
 # CocoaPods / SPM
 Pods/
 .build/
+.swiftpm/
+
+# Local tool settings
+.claude/settings.local.json
 
 # Misc
 *.hmap
